@@ -220,6 +220,36 @@ async def rand_all_classes(ctx):
         await ctx.send("You need to be in a voice channel first!")
 
 
+@bot.command(name="draft", aliases=["Draft", "DRAFT"])
+async def weapon_draft(ctx, num_teams: int = 3, weapons_per_team: int = 4):
+    if not ctx.author.voice or not ctx.author.voice.channel:
+        return await ctx.send("You need to be in a voice channel to use this command!")
+
+    members = list(ctx.author.voice.channel.members)
+
+    if num_teams <= 1:
+        return await ctx.send("You need at least 2 teams!")
+    if num_teams > len(members):
+        return await ctx.send(f"Not enough people to make {num_teams} teams!")
+    if num_teams * weapons_per_team > len(Weapons):
+        return await ctx.send(
+            f"Not enough unique weapons for {num_teams} teams of {weapons_per_team}."
+        )
+
+    random.shuffle(members)
+    teams = [[] for _ in range(num_teams)]
+    for i, member in enumerate(members):
+        teams[i % num_teams].append(member.display_name)
+
+    weapon_pool = random.sample(Weapons, num_teams * weapons_per_team)
+
+    response = "🎯 **Weapon Draft:**\n"
+    for i, team_members in enumerate(teams):
+        team_weapons = weapon_pool[i * weapons_per_team:(i + 1) * weapons_per_team]
+        response += f"**Team {i+1}** ({', '.join(team_members)}): {' | '.join(team_weapons)}\n"
+    await ctx.send(response)
+
+
 @bot.command(name="mode", aliases=["Mode", "modes", "MODES", "Chodes"])
 async def pick_mode(ctx):
     selected_mode = random.choice(Modes)
